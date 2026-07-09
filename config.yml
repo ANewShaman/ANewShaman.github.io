@@ -1,0 +1,11 @@
+title: Your Blog Name
+description: Notes on machine learning, and whatever else I'm digging into.
+theme: minima
+
+show_excerpts: true
+
+
+plugins:
+  - jekyll-feed
+
+markdown: kramdown
