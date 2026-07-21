@@ -11,7 +11,9 @@ Two posts back, I asked what the remaining 1% represented for a model.
 
 One post back, I asked what it represented for a person.
 
-I assumed that was the end of it. Understand the statistic. Understand the experience behind the statistic. Move on.
+I assumed that was the end of it.
+
+Understand the statistic. Understand the experience behind the statistic. Move on.
 
 Then it happened again.
 
@@ -19,77 +21,117 @@ Not to me, exactly. But to a system I'd built, on a problem I actually cared abo
 
 ---
 
-Here's roughly what happened.
+A model I was working on had been performing well for weeks. Calibrated. Monitored. Evaluated against more than just a single accuracy figure — everything I'd argued for across the last two posts.
 
-A model I was working on had been performing well for weeks. Calibrated, monitored, evaluated against more than just a single accuracy figure — everything I'd argued for in the last two posts. And then it made a mistake it had no business making. Not a borderline case. Not an ambiguous one. A mistake a first-year student would have caught.
+And then it made a mistake it had no business making.
 
-My first instinct was to treat it as a bug. Something to patch.
+Not a borderline case. Not something ambiguous.
 
-But nothing was broken. The model was doing exactly what it had always done. It had simply landed, this one time, on the wrong side of a probability it had been carrying around all along.
+A mistake a first-year student would have caught.
 
-That was the uncomfortable part. I already knew this could happen. I had written about it happening. And I still reacted like it was a surprise.
+My first instinct was to treat it as a bug. Something to patch. I went looking for the cause the way you look for the cause of any failure — assuming there had to be one, some specific thing that went wrong this time that hadn't gone wrong the other 999 times.
 
----
+There wasn't.
 
-I think there's a reason for that.
+The model was doing exactly what it had always done. It had simply landed, this one time, on the wrong side of a probability it had been carrying around all along.
 
-Understanding uncertainty in the abstract is not the same as sitting with it in practice.
-
-It's easy to accept that a well-calibrated model will be wrong roughly one time in a hundred. It's a different thing entirely to watch that one time arrive, on a Tuesday, in your own project, with your name on the commit.
-
-The math hadn't changed. My relationship to the math had.
+I sat with that for longer than I expected to.
 
 ---
 
-This is, I think, where a lot of people quietly stop trusting probabilistic systems, even after intellectually accepting them.
+That's worth making a little more precise.
 
-Not because the systems failed to perform as promised.
+Because **"carrying around a probability"** isn't just a turn of phrase.
 
-Because performing as promised includes failing sometimes, and living through that failure feels different from reading about it.
+If a model is right 99% of the time, each prediction is basically a coin flip weighted 99-to-1. Over a batch of 1,000 predictions, you don't get exactly 10 errors. You get somewhere around 10, with some natural spread above and below.
 
-Gigerenzer writes about this gap between how we calculate risk and how we feel it. Kahneman writes about how we generally reason far more with our reactions to outcomes than with the probabilities that produced them. Neither of them are talking about machine learning specifically. But the pattern transfers cleanly. A number can be perfectly correct and still land badly.
+Seven errors one week. Thirteen the next.
 
----
+That's not the model degrading.
 
-So what do you actually do with that?
+That's the variance the number always had. It just wasn't visible when I only ever looked at the aggregate, at the single 99% printed at the end of a training run.
 
-Not rhetorically. Practically. If the 1% is guaranteed to keep happening no matter how good the system gets, what changes?
+The mistake I made wasn't statistical.
 
-I don't think the answer is to try harder to prevent it. Some of that 1% is genuinely irreducible — the ambiguous handwriting, the atypical presentation, the case that would confuse a competent human too. Chasing it to zero usually means overfitting to the dataset in front of you rather than building something more honest.
-
-I think the answer is closer to building for the failure, not just around it.
-
-That means the confusion matrix isn't a one-time diagnostic you run before deployment — it's something you keep watching. It means confidence scores aren't just reported, they're acted on: a low-confidence prediction should trigger something different downstream than a high-confidence one, whether that's a second opinion, a human reviewer, or simply a flag. It means the system is designed with the assumption that the 1% will show up, rather than the hope that it won't.
-
-Model monitoring exists for exactly this reason. Not because the model is expected to degrade, but because the guarantee was never "always right." It was "right about this often, under these conditions" — and someone has to keep checking that the conditions still hold.
+It was mistaking a normal draw from a known distribution for a violation of it. I had read the number correctly and still reacted to it incorrectly, which is a strange kind of error to catch yourself making.
 
 ---
 
-There's also a harder question underneath this, one I don't have a tidy answer for.
+The same goes for confidence.
 
-When the 1% happens to someone, does it matter that the system was honest about the odds beforehand?
+A model saying "99% sure" is making a checkable claim, not just a reassuring one. Gather every prediction where it said 99%, and roughly 99% of those should actually be correct.
 
-I want to say yes. A well-calibrated model that told you upfront it was 99% confident, and was wrong anyway, is a fundamentally different kind of failure than an overconfident model that insisted it couldn't be wrong. One is a system being honest about uncertainty. The other is a system lying about it.
+When that stops holding, there's a name for it.
 
-But I'm not sure that distinction is much comfort to the person on the receiving end of the outcome. The forecast being honest about the 1% chance of rain doesn't make you any less wet.
+**Calibration.**
 
-Maybe that's fine. Maybe honesty about uncertainty was never supposed to make the outcome feel better. It was only ever supposed to make the decision-making around it more defensible — for the designer, the doctor, the reviewer, whoever has to explain afterward why the system was trusted in the first place.
+It's a separate failure from accuracy. A model can score well on one and badly on the other. Guo et al. found that a lot of modern deep networks are exactly this — accurate, but quietly overconfident, especially compared to the shallower networks that came before them. More capacity, it turns out, doesn't automatically buy you more honesty about uncertainty. Sometimes it buys you the opposite.
 
-That's a colder kind of comfort than I'd like. But I think it's the honest one.
+Here's why that distinction matters.
+
+An honest 1% and a hidden 1% look identical in an accuracy report. Both say 99%. Both round to the same headline. They only stop looking identical once you check whether the confidence scores attached to each prediction were telling the truth, and by then most people have already stopped looking.
 
 ---
 
-So here's where I've landed, three posts into a question I thought would take one.
+There's a similar story with the confusion matrix. It tells you *where* a model's errors concentrate, not just how many there are.
 
-Accuracy hides behaviour. Confidence hides certainty. And even once you've accounted for both, the 1% doesn't go away — it just becomes something you've agreed to build around instead of something you're surprised by.
+Take the classic example.
 
-I used to think the goal of evaluation was to shrink that number.
+A screening model where 99 out of 100 patients are healthy. Predicting "healthy" every single time gets you 99% accuracy, and zero ability to catch the one patient who's actually sick.
 
-Now I think the goal is to make sure that when it happens — and it will happen — the system, and the people relying on it, aren't caught off guard.
+Accuracy treats every mistake as equally costly.
+
+Almost nothing important actually is.
+
+That's why fields like medicine report sensitivity and specificity separately instead of one blended number. Missing a real case and raising a false alarm are not the same mistake, even when accuracy scores them as if they were. A false alarm costs you a follow-up test. A missed case costs something you can't undo.
+
+I think this is where the first post and this one finally meet. Error consistency asked whether two 99%-accurate models fail on the same examples or different ones. Cost asks whether all those failures are worth the same amount, once they happen. Neither question shows up if you only ever report the single number at the top.
+
+---
+
+So what do you do once you've accepted that the 1% is not only real, but statistically expected to keep showing up, in every model you'll ever ship?
+
+I don't think the answer is to chase it toward zero.
+
+Some of it is genuinely irreducible — ambiguous input, edge cases even a careful human would get wrong. Squeezing a benchmark number tighter usually just means overfitting to the dataset in front of you, learning the noise in that particular sample rather than anything that generalizes.
+
+I think the better answer is simpler.
+
+Design around the fact that it *will* happen, instead of being surprised each time it does.
+
+That means routing low-confidence predictions somewhere other than straight into a decision, whether that's a second model, a human reviewer, or an honest "unsure" flag that says the system itself isn't sure enough to be trusted here. It means watching the error rate over time instead of checking it once at deployment and calling it done, since a shift in that rate is a signal worth investigating, not noise to be smoothed over. It means reporting accuracy with some sense of how much data it's based on, because "99% accurate on 100 examples" and "99% accurate on 100,000" are not the same claim, even though they're the same number on the slide.
+
+None of that closes the actual gap, though.
+
+---
+
+Even a model that's well-calibrated, properly monitored, and sensibly routed around its own uncertainty still eventually produces a case that lands on the wrong side of the threshold.
+
+And that case is a person. A diagnosis. A decision that didn't go the way the odds suggested.
+
+The math can tell you how often that will happen.
+
+It can tell you how confident you should have been each time.
+
+It can't tell you what you owe the one it happened to.
+
+I don't think that's a flaw in the math.
+
+I think it's just where the math stops being the relevant tool, and something else has to take over — a process, a person, a policy for what happens next, none of which live inside the model itself.
+
+What surprised me most, going back through this a third time, wasn't that the 1% happened again.
+
+It's that knowing the exact shape of the distribution didn't make the individual outcome feel any smaller. I could tell you precisely how likely it was. I still had to sit with it exactly as much as if I hadn't known at all.
+
+Maybe that's the actual lesson, buried under two posts' worth of metrics.
+
+Understanding uncertainty doesn't shrink it.
+
+It just tells you, in advance, exactly how much of it you're going to have to carry.
 
 The 1% was never the part you eliminate.
 
-It's the part you design for.
+It's the part the model can quantify, and the part it can't carry for you.
 
 ---
 
@@ -100,4 +142,3 @@ It's the part you design for.
 * Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. *On Calibration of Modern Neural Networks.* Proceedings of the 34th International Conference on Machine Learning (ICML), 2017.
 * Gigerenzer, G. *Calculated Risks: How to Know When Numbers Deceive You.*
 * Kahneman, D. *Thinking, Fast and Slow.*
-* Amodei, D., et al. *Concrete Problems in AI Safety.*
